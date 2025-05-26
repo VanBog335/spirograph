@@ -17,23 +17,22 @@
  * Up.15.04.25 после ручного билда tcc баг ушёл, но
  * так как tcc расчитан на скорость компиляции и малый
  * размер бинарников, то скорость работы выходной
- * программы по сравнению с gcc так неплохо так проседает
+ * программы по сравнению с gcc неплохо так проседает
  */
 
 #include "raylib.h"
 #include "incs.h"
-#include <stdlib.h> // бе
 
 i32 main()
 {
 	u16 scrWidth = 512;
 	u16 scrHeight = 512;
-	u32 pixCount = 40000;
+	u32 pixCount = 65535;
 	i8 p = 0; // кол-во синусов и косинусов в формуле, иначе лепестков
 	Color col;
 	u8 tmpbool = 0b00000001;
 	u32 tmp1 = pixCount;
-	i16 px, py;
+
 	// k - отношение диаметров шестерёнок
 	// d - отверсие карандаша в шестерёнке
 
@@ -41,9 +40,7 @@ i32 main()
 	time = 1,
 	waveModifier = 0, // k
 	angleStep = 0, 
-	scale; // d
-	
-	Vector2 *pixelPositions = (Vector2 *)malloc(sizeof(Vector2) * pixCount);
+	scale, x, y; // d
 
 	InitWindow(scrWidth, scrHeight, "спирограф");
 	SetTargetFPS(0);
@@ -54,7 +51,6 @@ i32 main()
 		
 		if (tmp1 != pixCount) {
 			pixCount = tmp1;
-			pixelPositions = (Vector2 *)realloc(pixelPositions, sizeof(Vector2) * pixCount);
 
 			angleStep = M_PI * 2 / pixCount;
 			if (waveModifier != (i8)waveModifier)
@@ -96,35 +92,21 @@ i32 main()
 		}
 
 		scale = Lsin(time * M_PI) * 0.75;
-		
-		for (u32 i = 0; i < pixCount; i++) {
-			f32 accumX = 0.0f;
-			f32 accumY = 0.0f;
-			for (i32 j = 0; j < p; j++) {
-				accumX += Pow(scale, j) * Lsin(time + Pow(waveModifier, j) * i * angleStep);
-				accumY += Pow(scale, j) * Lcos(time + Pow(waveModifier, j) * i * angleStep);
-			}
-			pixelPositions[i].x = (scrWidth >> 1) + 80 * accumX;
-			pixelPositions[i].y = (scrHeight >> 1) + 80 * accumY;
-		}
 
 		BeginDrawing();
 		// {
 		//ClearBackground(GetColor(24));
 		DrawRectangle(0, 0, scrWidth, scrHeight, GetColor( (u8)(32*60*GetFrameTime()) ) );
 
-		bool drawn[512 * 512] = { 0 };
-			for (u32 i = 0; i < pixCount; i++) {
-				px = pixelPositions[i].x;
-				py = pixelPositions[i].y;
-				if (px >= 0 && px < scrWidth && py >= 0 && py < scrHeight) {
-					i32 index = py * scrWidth + px;
-					if (!drawn[index]) {
-						DrawPixel(px, py, col);
-						drawn[index] = 1;
-					}
-				}
+		for (int i = 0; i < pixCount; i++) {
+			x = 0;
+			y = 0;
+			for (int j = 0; j < p; j++) {
+				x += Pow(scale,j) * Lsin(time + Pow(waveModifier,j) * i * angleStep);
+				y += Pow(scale,j) * Lcos(time + Pow(waveModifier,j) * i * angleStep);
 			}
+			DrawPixel((scrWidth>>1) + 80*x, (scrHeight>>1) + 80*y, col);
+		}
 		
 		DrawRectangle(0, 0, 90, 2+5+2+14+14, BLACK);
 
@@ -136,6 +118,5 @@ i32 main()
 		// }
 		EndDrawing();
 	}
-	free(pixelPositions);
 	CloseWindow();
 }

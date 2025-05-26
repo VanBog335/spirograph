@@ -5,4 +5,4 @@ TCFLAGS=-L./ -lraylib -Wall
 
 all:
 	$(CC) $(CFLAGS) -o waything.exe waything.c
-	./waything
+	$(CC) $(CFLAGS) -o waything-old.exe waything-old.c
