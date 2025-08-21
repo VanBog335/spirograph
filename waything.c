@@ -24,18 +24,17 @@
 #include "incs.h"
 #include <stdlib.h> // бе
 
-i32 main()
+i32 main(i32 argc, char **argv)
 {
-	u16 scrWidth = 512;
-	u16 scrHeight = 512;
-	u32 pixCount = 40000;
+	const u16 scrWidth = 512;
+	const u16 scrHeight = 512;
+	u32 pixCount = argc == 1 ? 40000 : atoi(argv[1]);
 	i8 p = 0; // кол-во синусов и косинусов в формуле, иначе лепестков
 	Color col;
-	u8 tmpbool = 0b00000001;
-	u32 tmp1 = pixCount;
 	i16 px, py;
 	// k - отношение диаметров шестерёнок
 	// d - отверсие карандаша в шестерёнке
+	bool drawn[scrWidth*scrHeight];
 
 	f32
 	time = 1,
@@ -46,12 +45,14 @@ i32 main()
 	Vector2 *pixelPositions = (Vector2 *)malloc(sizeof(Vector2) * pixCount);
 
 	InitWindow(scrWidth, scrHeight, "спирограф");
-	SetTargetFPS(0);
+	SetTargetFPS(60);
 
 	while (!WindowShouldClose()) {
 		// привязка работы к 60 фпс, при любом будет нормально вращаться
-		time += 0.003*60 * GetFrameTime();
+		time += 0.002*60 * GetFrameTime();
 		
+		// старый код, отвечающий за изменение pixCount
+		/*
 		if (tmp1 != pixCount) {
 			pixCount = tmp1;
 			pixelPositions = (Vector2 *)realloc(pixelPositions, sizeof(Vector2) * pixCount);
@@ -79,7 +80,8 @@ i32 main()
 			pixCount = 0;
 			tmp1 = 0;
 		}
-
+		*/
+		
 		// black magic
 		if (time > 1) {
 			time = 0;
@@ -111,9 +113,13 @@ i32 main()
 		BeginDrawing();
 		// {
 		//ClearBackground(GetColor(24));
+		// я хз как, но можно заюзать процентно альфу
 		DrawRectangle(0, 0, scrWidth, scrHeight, GetColor( (u8)(32*60*GetFrameTime()) ) );
-
-		bool drawn[512 * 512] = { 0 };
+		
+		for (u32 i = 0; i < scrWidth*scrHeight; i++) {
+			drawn[i] = 0;
+		}
+		
 			for (u32 i = 0; i < pixCount; i++) {
 				px = pixelPositions[i].x;
 				py = pixelPositions[i].y;
@@ -127,12 +133,10 @@ i32 main()
 			}
 		
 		DrawRectangle(0, 0, 90, 2+5+2+14+14, BLACK);
-
-		//DrawText(TextFormat("%08d", BITVAL(tmpbool,0)*1 + BITVAL(tmpbool,1)*10 + BITVAL(tmpbool,2)*100 + BITVAL(tmpbool,3)*1000 + BITVAL(tmpbool,4)*10000 + BITVAL(tmpbool,5)*100000 + BITVAL(tmpbool,6)*1000000 + BITVAL(tmpbool,7)*10000000), 5, 5+14+5, 20, RAYWHITE);
 		
 		DrawText(TextFormat("%u", pixCount), 2, 5+14, 20, RAYWHITE);
-		
-		DrawFPS(2,0);
+		DrawText(TextFormat("%.3f", GetFrameTime()), 2, 0, 20, RAYWHITE);
+		//DrawFPS(2,0);
 		// }
 		EndDrawing();
 	}
